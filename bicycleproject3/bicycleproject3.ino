@@ -18,8 +18,8 @@ volatile int tick = 0;
 
 int refreshrate = 5000;
 long timeperiod ;
-int tickold = 0;
-int tickdiff = 0;
+int tickold;
+int tickdiff;
 int rpm = 0;
 long int conversionrate = 60000;    //  converts ticks per refreshrate of 5000 ms  to RPM
 
@@ -36,30 +36,42 @@ void setup() {
 	pinMode(LED4, OUTPUT);
 	pinMode(LED3, OUTPUT);
 	attachPinChangeInterrupt(ticker, ticking, FALLING);
+
 	timeperiod = millis();
+	tickold = tick;
 }
 
 // the loop function runs over and over again until power down or reset
 void loop() {
 
-	if (millis() > timeperiod + refreshrate){
-
-		Serial.println("hello world");
-
 	
-	Serial.println(timeperiod);
-	timeperiod = millis();
-}	
+	if (millis() > timeperiod + refreshrate) {
+		tickdiff = tick - tickold;
+		if (tickdiff > 3) {
+			digitalWrite(LED1, HIGH);
+			tickold = tick;
+		}
+		else
+		{
+			digitalWrite(LED1, LOW);
+			tickold = tick;
+		}
 
-	if (timeperiod < 0) {
-		Serial.println("broken time is");
+
+
 
 		Serial.println(timeperiod);
-		delay(1000);
+		timeperiod = millis();
+		Serial.print(" ticker count is: ");
+		Serial.println(tick);
+		Serial.println(tickdiff);
+		Serial.println(" ");
 	}
 }
 
+
+
 void ticking()
 {
-	tick = tick++;
+	tick = tick +1 ;
 }
