@@ -15,13 +15,14 @@
 
 volatile int tick = 0;
 
-int refreshrate = 1000;
-int timeperiod = 0;
+int64_t timeperiod = 0;
+int refreshrate = 5000;
+//int long timeperiod = 0;
 int tickold = 0;
 int tickdiff = 0;
 int rpm = 0;
 int conversionrate = 60000;    //  converts ticks per refreshrate of 5000 ms  to RPM
-
+unsigned long millis();
 
 
 
@@ -48,7 +49,13 @@ void loop() {
 	int timenow = millis();
 	Serial.println(timenow);
 	timeperiod = millis();
-}
+}	
+	int timenow= millis();
+	if (timenow < 0) {
+		Serial.println("broken time is");
+
+		Serial.println(timenow);
+	}
 }
 
 void ticking()
