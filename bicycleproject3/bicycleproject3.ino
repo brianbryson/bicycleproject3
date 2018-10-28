@@ -79,8 +79,12 @@ void loop() {
 		Serial.print(" ticker count is: ");
 		Serial.println(tick);
 		Serial.println(tickdiff);
-		Serial.println(" ");
+
 		tickold = tick;
+		rpm = 1000*tickdiff / refreshrate;
+		Serial.print("RPM is ");
+		Serial.println(rpm);
+		Serial.println(" ");
 	}
 }
 
