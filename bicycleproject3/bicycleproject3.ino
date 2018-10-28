@@ -47,16 +47,30 @@ void loop() {
 	
 	if (millis() > timeperiod + refreshrate) {
 		tickdiff = tick - tickold;
-		if (tickdiff > 3) {
-			digitalWrite(LED1, HIGH);
-			tickold = tick;
-		}
-		else
-		{
-			digitalWrite(LED1, LOW);
-			tickold = tick;
-		}
 
+		digitalWrite(LED1, LOW);
+		digitalWrite(LED2, LOW);
+		digitalWrite(LED3, LOW);
+		digitalWrite(LED4, LOW);
+		digitalWrite(LED5, LOW);
+
+		switch (tickdiff) {
+		case 0 ... 2:
+			digitalWrite(LED1, HIGH);
+			break;
+		case 3:
+			digitalWrite(LED2, HIGH);
+			break;
+		case 4:
+			digitalWrite(LED3, HIGH);
+			break;
+		case 5:
+			digitalWrite(LED4, HIGH);
+			break;
+		case 6 ... 100:
+			digitalWrite(LED5, HIGH);
+			break;
+		}
 
 
 
@@ -66,6 +80,7 @@ void loop() {
 		Serial.println(tick);
 		Serial.println(tickdiff);
 		Serial.println(" ");
+		tickold = tick;
 	}
 }
 
