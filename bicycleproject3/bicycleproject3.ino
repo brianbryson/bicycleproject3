@@ -6,17 +6,17 @@
 */
 
 #include <PinChangeInt.h>
-#define ticker 2
+#define ticker 9
 #define LED1 3
-#define LED5 4
-#define LED2 6
-#define LED4 8
-#define LED3 10
+#define LED2 4
+#define LED3 5
+#define LED4 6
+#define LED5 7
 
 volatile int tick = 0;
 
 
-int refreshrate = 5000;
+int refreshrate = 2000;
 long timeperiod ;
 int tickold;
 int tickdiff;
@@ -35,7 +35,7 @@ void setup() {
 	pinMode(LED2, OUTPUT);
 	pinMode(LED4, OUTPUT);
 	pinMode(LED3, OUTPUT);
-	attachPinChangeInterrupt(ticker, ticking, FALLING);
+	attachPinChangeInterrupt(ticker, ticking, RISING);
 
 	timeperiod = millis();
 	tickold = tick;
@@ -43,8 +43,9 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-
 	
+	
+
 	if (millis() > timeperiod + refreshrate) {
 		tickdiff = tick - tickold;
 
@@ -58,18 +59,18 @@ void loop() {
 		case 0 ... 2:
 			digitalWrite(LED1, HIGH);
 			break;
-		case 3:
+		case 3 ... 4:
 			digitalWrite(LED2, HIGH);
 			break;
-		case 4:
+		case 5 ...9 :
 			digitalWrite(LED3, HIGH);
 			break;
-		case 5:
+		case 10 ... 100:
 			digitalWrite(LED4, HIGH);
 			break;
-		case 6 ... 100:
-			digitalWrite(LED5, HIGH);
-			break;
+		//case 6 ... 100:
+		//	digitalWrite(LED5, HIGH);
+		//	break;
 		}
 
 
@@ -93,4 +94,5 @@ void loop() {
 void ticking()
 {
 	tick = tick +1 ;
+	digitalWrite(LED5, HIGH);
 }
