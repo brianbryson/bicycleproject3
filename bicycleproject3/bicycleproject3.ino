@@ -25,7 +25,7 @@ int tickold;
 int tickdiff;
 int rpm = 0;
 long int conversionrate = 60000;    //  converts ticks per refreshrate of 5000 ms  to RPM
-
+int x = 0;
 
 
 
@@ -49,6 +49,13 @@ void loop() {
 	
 	
 
+cadencefunction();
+printing();
+}
+
+
+void cadencefunction()
+{
 	if (millis() > timeperiod + refreshrate) {
 		tickdiff = tick - tickold;
 
@@ -65,33 +72,41 @@ void loop() {
 		case 3 ... 4:
 			digitalWrite(LED2, HIGH);
 			break;
-		case 5 ...9 :
+		case 5 ...9:
 			digitalWrite(LED3, HIGH);
 			break;
 		case 10 ... 100:
 			digitalWrite(LED4, HIGH);
 			break;
-		//case 6 ... 100:
-		//	digitalWrite(LED5, HIGH);
-		//	break;
+			//case 6 ... 100:
+			//	digitalWrite(LED5, HIGH);
+			//	break;
 		}
 
+		x = 1;
 
 
-		Serial.println(timeperiod);
-		timeperiod = millis();
-		Serial.print(" ticker count is: ");
-		Serial.println(tick);
-		Serial.println(tickdiff);
-
-		tickold = tick;
-		rpm = 1000*tickdiff / refreshrate;
-		Serial.print("RPM is ");
-		Serial.println(rpm);
-		Serial.println(" ");
 	}
 }
 
+void printing()
+{
+	if (x == 1)
+		{
+	Serial.println(timeperiod);
+	timeperiod = millis();
+	Serial.print(" ticker count is: ");
+	Serial.println(tick);
+	Serial.println(tickdiff);
+
+	tickold = tick;
+	rpm = 1000 * tickdiff / refreshrate;
+	Serial.print("RPM is ");
+	Serial.println(rpm);
+	Serial.println(" ");
+	x = 0;
+	}
+}
 
 
 void ticking()
