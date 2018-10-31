@@ -3,9 +3,6 @@
  Created:	10/27/2018 8:26:58 AM
  Author:	brian
  Version 3: 
-
- only have 4 leds running, 5th is being used to show when the interuptor gets toggled, and is reset every cycle. prototype nano board works on bicycle.  
-
 */
 
 #include <PinChangeInt.h>
