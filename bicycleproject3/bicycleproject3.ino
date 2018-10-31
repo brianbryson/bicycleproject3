@@ -3,6 +3,10 @@
  Created:	10/27/2018 8:26:58 AM
  Author:	brian
  Version 3: 
+ RPM is currently being calculated as 1 trip of the sensor as a revolution
+ functions working.  need to calculate conversion rate and change refRate to ~500 or possibly more like 250
+
+ each iteration of the RPM calculation is about 1ms			not sure what to do about that or if i need to do anything. probably not yet.
 */
 
 #include <PinChangeInt.h>
@@ -16,13 +20,13 @@
 volatile int tick = 0;
 
 
-int refreshrate = 2000;
-long timeperiod ;
-int tickold;
+int refreshrate = 250;  //   how often it refreshes and recalculates the RPM
+long timeperiod;
+unsigned long tickold;
 int tickdiff;
-int rpm = 0;
-long int conversionrate = 60000;    //  converts ticks per refreshrate of 5000 ms  to RPM
-int x = 0;
+unsigned int rpm;
+long int conversionrate = 4000;    //  converts ticks per refreshrate of 5000 ms  to RPM
+int x;
 
 
 
@@ -35,7 +39,7 @@ void setup() {
 	pinMode(LED2, OUTPUT);
 	pinMode(LED4, OUTPUT);
 	pinMode(LED3, OUTPUT);
-	attachPinChangeInterrupt(ticker, ticking, RISING);
+	attachPinChangeInterrupt(ticker, ticking, FALLING);
 
 	timeperiod = millis();
 	tickold = tick;
@@ -43,11 +47,10 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-	
-	
 
 cadencefunction();
-printing();
+printing();  
+
 }
 
 
@@ -55,6 +58,8 @@ void cadencefunction()
 {
 	if (millis() > timeperiod + refreshrate) {
 		tickdiff = tick - tickold;
+		tickold = tick;
+		rpm = conversionrate * tickdiff / refreshrate;  // refreshrate is coming out to be 2001millis which shouldnt really effect the calculation much
 
 		digitalWrite(LED1, LOW);
 		digitalWrite(LED2, LOW);
@@ -62,7 +67,7 @@ void cadencefunction()
 		digitalWrite(LED4, LOW);
 		digitalWrite(LED5, LOW);
 
-		switch (tickdiff) {
+		switch (rpm) {
 		case 0 ... 2:
 			digitalWrite(LED1, HIGH);
 			break;
@@ -80,28 +85,26 @@ void cadencefunction()
 			//	break;
 		}
 
-		x = 1;
-
+		x++;
+		timeperiod = millis();
 
 	}
 }
 
 void printing()
 {
-	if (x == 1)
-		{
-	Serial.println(timeperiod);
-	timeperiod = millis();
-	Serial.print(" ticker count is: ");
-	Serial.println(tick);
-	Serial.println(tickdiff);
+	if (x >= 4) {
+		Serial.println(timeperiod);
 
-	tickold = tick;
-	rpm = 1000 * tickdiff / refreshrate;
-	Serial.print("RPM is ");
-	Serial.println(rpm);
-	Serial.println(" ");
-	x = 0;
+		Serial.print(" ticker count is: ");
+		Serial.println(tick);
+		Serial.println(tickdiff);
+
+		tickold = tick;
+		Serial.print("RPM is ");
+		Serial.println(rpm);
+		Serial.println(" ");
+		x = 0;
 	}
 }
 
