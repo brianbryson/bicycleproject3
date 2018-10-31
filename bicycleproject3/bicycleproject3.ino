@@ -6,17 +6,17 @@
 */
 
 #include <PinChangeInt.h>
-#define ticker 9
+#define ticker 2
 #define LED1 3
-#define LED2 4
-#define LED3 5
-#define LED4 6
-#define LED5 7
+#define LED5 4
+#define LED2 6
+#define LED4 8
+#define LED3 10
 
 volatile int tick = 0;
 
 
-int refreshrate = 2000;
+int refreshrate = 5000;
 long timeperiod ;
 int tickold;
 int tickdiff;
@@ -35,7 +35,7 @@ void setup() {
 	pinMode(LED2, OUTPUT);
 	pinMode(LED4, OUTPUT);
 	pinMode(LED3, OUTPUT);
-	attachPinChangeInterrupt(ticker, ticking, RISING);
+	attachPinChangeInterrupt(ticker, ticking, FALLING);
 
 	timeperiod = millis();
 	tickold = tick;
@@ -43,9 +43,8 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-	
-	
 
+<<<<<<< HEAD
 cadencefunction();
 printing();
 }
@@ -53,6 +52,9 @@ printing();
 
 void cadencefunction()
 {
+=======
+	
+>>>>>>> parent of 20a8a5e... prototype working
 	if (millis() > timeperiod + refreshrate) {
 		tickdiff = tick - tickold;
 
@@ -66,18 +68,28 @@ void cadencefunction()
 		case 0 ... 2:
 			digitalWrite(LED1, HIGH);
 			break;
-		case 3 ... 4:
+		case 3:
 			digitalWrite(LED2, HIGH);
 			break;
+<<<<<<< HEAD
 		case 5 ...9:
+=======
+		case 4:
+>>>>>>> parent of 20a8a5e... prototype working
 			digitalWrite(LED3, HIGH);
 			break;
-		case 10 ... 100:
+		case 5:
 			digitalWrite(LED4, HIGH);
 			break;
+<<<<<<< HEAD
 			//case 6 ... 100:
 			//	digitalWrite(LED5, HIGH);
 			//	break;
+=======
+		case 6 ... 100:
+			digitalWrite(LED5, HIGH);
+			break;
+>>>>>>> parent of 20a8a5e... prototype working
 		}
 
 		x = 1;
@@ -109,5 +121,4 @@ void printing()
 void ticking()
 {
 	tick = tick +1 ;
-	digitalWrite(LED5, HIGH);
 }
