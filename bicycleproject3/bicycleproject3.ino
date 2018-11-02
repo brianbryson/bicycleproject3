@@ -6,7 +6,8 @@
  RPM is currently being calculated as 1 trip of the sensor as a revolution
  functions working.  need to calculate conversion rate and change refRate to ~500 or possibly more like 250
 
- each iteration of the RPM calculation is about 1ms			not sure what to do about that or if i need to do anything. probably not yet.
+ each iteration of the cadence calculation is about 21ms			not sure what to do about that or if i need to do anything. probably not yet. 
+ althoug its getting big and i am getting concerned
 */
 
 #include <PinChangeInt.h>
@@ -22,17 +23,31 @@
 volatile int tick1 = 0;  //cadence sensor
 volatile int tick2 = 0;  // gear calculations
 volatile int wcount = 0;  //wheel speed.
-
-
-int refreshrate = 250;  //   how often it refreshes and recalculates the RPM
 long timeperiod;  //  timeperiod is set to millis and overflows after 32 seconds, set as long will run for 20+ days without issues
-unsigned long tickold;
-int tickdiff;
-unsigned int rpm;
-long int conversiontick1 = 4000;   // conversionrate for tick 1			needs to be set
+int refreshrate = 1000;  //   how often it refreshes and recalculates the RPM
+
+
+
+//		ints for cadence function
+unsigned long tickold1;
+int tickdiff1;
+unsigned int rpm1;
+long int conversiontick1 = 1000;   // conversionrate for tick 1			needs to be set
+
+
+
+//		ints for gearratio functions
 long int conversiontick2 = 4000;   // conversionrate for tick 2
+int tickdiff2;
+unsigned int rpm2;
+unsigned long tickold2;
+
+
+
+
+//			ints for speedcalc
 long int conversionwcount = 4000;   // conversionrate for wcount
-int state;
+
 
 
 
@@ -49,7 +64,7 @@ void setup() {
 	attachPinChangeInterrupt(ticker2, ticking2, FALLING);
 	attachPinChangeInterrupt(wspeed, Wrev, FALLING);				// might need to be a rising signal.  TBD
 	timeperiod = millis();
-	tickold = tick1;
+	tickold1 = tick1;
 }
 
 // the loop function runs over and over again until power down or reset
@@ -59,7 +74,7 @@ void loop() {
 
 		cadencefunction();
 		gearratiofunction();
-		gearcalcs();
+		speedcalcs();
 		printing();
 		timeperiod = millis();
 	}
@@ -70,9 +85,9 @@ void loop() {
 void cadencefunction()   // cadence calculations and LEDS
 {
  {
-		tickdiff = tick1 - tickold;
-		tickold = tick1;
-		rpm = conversiontick1 * tickdiff / refreshrate;  // refreshrate is coming out to be 2001millis which shouldnt really effect the calculation much
+		tickdiff1 = tick1 - tickold1;
+		tickold1 = tick1;
+		rpm1 = conversiontick1 * tickdiff1 / refreshrate;  // refreshrate is coming out to be 2001millis which shouldnt really effect the calculation much
 
 		digitalWrite(LED1, LOW);
 		digitalWrite(LED2, LOW);
@@ -80,22 +95,22 @@ void cadencefunction()   // cadence calculations and LEDS
 		digitalWrite(LED4, LOW);
 		digitalWrite(LED5, LOW);
 
-		switch (rpm) {
+		switch (rpm1) {
 		case 0 ... 2:
 			digitalWrite(LED1, HIGH);
 			break;
 		case 3 ... 4:
 			digitalWrite(LED2, HIGH);
 			break;
-		case 5 ...9:
+		case 5 ...7:
 			digitalWrite(LED3, HIGH);
 			break;
-		case 10 ... 100:
+		case 8 ... 9:
 			digitalWrite(LED4, HIGH);
 			break;
-			//case 6 ... 100:
-			//	digitalWrite(LED5, HIGH);
-			//	break;
+		case 10 ... 100:
+			digitalWrite(LED5, HIGH);
+			break;
 		}
 
 		timeperiod = millis();
@@ -110,39 +125,59 @@ void printing()
 
 		Serial.print(" ticker count is: ");
 		Serial.println(tick1);
-		Serial.println(tickdiff);
+		Serial.println(tickdiff1);
 
-		tickold = tick1;
+		tickold1 = tick1;
 		Serial.print("RPM is ");
-		Serial.println(rpm);
+		Serial.println(rpm1);
+		Serial.print("cassete count = ");
+		Serial.println(tick2);
+		Serial.print("revoultion count = ");
+			Serial.println(wcount);
+		
 		Serial.println(" ");
+}
+
+
+
+
+
+void gearratiofunction() //calculate gear ratio depending on tick1 and tick 2.  easier on a 1x drivetrain.
+						 //need to calculate the ratios, and find the ranges to set to LCD? screen as the output.   
+{
+	
+
+
+}
+
+void speedcalcs()
+{
 
 }
 
 
+
+
+
+
+
+
+
+// interrupt counters are only counting
 void ticking1()
 {
 	tick1++ ;
-	digitalWrite(LED5, HIGH);
+	//digitalWrite(LED5, HIGH); //should be removed from code once finalized and re add in functionality of 5th LED
 }
  
 void ticking2()
 {
 	tick2++;
-	
+	//digitalWrite(LED5, HIGH);
 
 }
+
 void Wrev()
 {
-	wcount ++;
-}
-
-void gearratiofunction()
-{
-
-}
-
-void gearcalcs()
-{
-
+	wcount++;
 }
