@@ -10,56 +10,69 @@
 */
 
 #include <PinChangeInt.h>
-#define ticker 9
+#define ticker1 9    // opto interruptor on chainring
+#define ticker2 10    // opto interruptor on cassette
+#define wspeed 11	  // hall effect sensor on R wheel.  
 #define LED1 3
 #define LED2 4
 #define LED3 5
 #define LED4 6
 #define LED5 7
 
-volatile int tick = 0;
+volatile int tick1 = 0;  //cadence sensor
+volatile int tick2 = 0;  // gear calculations
+volatile int wcount = 0;  //wheel speed.
 
 
 int refreshrate = 250;  //   how often it refreshes and recalculates the RPM
-long timeperiod;
+long timeperiod;  //  timeperiod is set to millis and overflows after 32 seconds, set as long will run for 20+ days without issues
 unsigned long tickold;
 int tickdiff;
 unsigned int rpm;
-long int conversionrate = 4000;    //  converts ticks per refreshrate of 5000 ms  to RPM
-int x;
+long int conversiontick1 = 4000;   // conversionrate for tick 1			needs to be set
+long int conversiontick2 = 4000;   // conversionrate for tick 2
+long int conversionwcount = 4000;   // conversionrate for wcount
+int state;
 
 
 
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(9600);
-	pinMode(ticker, INPUT_PULLUP);
+	pinMode(ticker1, INPUT_PULLUP);
 	pinMode(LED1, OUTPUT);
 	pinMode(LED5, OUTPUT);
 	pinMode(LED2, OUTPUT);
 	pinMode(LED4, OUTPUT);
 	pinMode(LED3, OUTPUT);
-	attachPinChangeInterrupt(ticker, ticking, FALLING);
-
+	attachPinChangeInterrupt(ticker1, ticking1, FALLING);
+	attachPinChangeInterrupt(ticker2, ticking2, FALLING);
+	attachPinChangeInterrupt(wspeed, Wrev, FALLING);				// might need to be a rising signal.  TBD
 	timeperiod = millis();
-	tickold = tick;
+	tickold = tick1;
 }
 
 // the loop function runs over and over again until power down or reset
 void loop() {
+	if (millis() > timeperiod + refreshrate) {
 
-cadencefunction();
-printing();  
+
+		cadencefunction();
+		gearratiofunction();
+		gearcalcs();
+		printing();
+		timeperiod = millis();
+	}
 
 }
 
 
-void cadencefunction()
+void cadencefunction()   // cadence calculations and LEDS
 {
-	if (millis() > timeperiod + refreshrate) {
-		tickdiff = tick - tickold;
-		tickold = tick;
-		rpm = conversionrate * tickdiff / refreshrate;  // refreshrate is coming out to be 2001millis which shouldnt really effect the calculation much
+ {
+		tickdiff = tick1 - tickold;
+		tickold = tick1;
+		rpm = conversiontick1 * tickdiff / refreshrate;  // refreshrate is coming out to be 2001millis which shouldnt really effect the calculation much
 
 		digitalWrite(LED1, LOW);
 		digitalWrite(LED2, LOW);
@@ -85,7 +98,6 @@ void cadencefunction()
 			//	break;
 		}
 
-		x++;
 		timeperiod = millis();
 
 	}
@@ -93,24 +105,44 @@ void cadencefunction()
 
 void printing()
 {
-	if (x >= 4) {
+
 		Serial.println(timeperiod);
 
 		Serial.print(" ticker count is: ");
-		Serial.println(tick);
+		Serial.println(tick1);
 		Serial.println(tickdiff);
 
-		tickold = tick;
+		tickold = tick1;
 		Serial.print("RPM is ");
 		Serial.println(rpm);
 		Serial.println(" ");
-		x = 0;
-	}
+
 }
 
 
-void ticking()
+void ticking1()
 {
-	tick = tick +1 ;
+	tick1++ ;
 	digitalWrite(LED5, HIGH);
+}
+ 
+void ticking2()
+{
+	tick2++;
+	
+
+}
+void Wrev()
+{
+	wcount ++;
+}
+
+void gearratiofunction()
+{
+
+}
+
+void gearcalcs()
+{
+
 }
