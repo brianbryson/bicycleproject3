@@ -24,7 +24,7 @@ volatile int tick1 = 0;  //cadence sensor
 volatile int tick2 = 0;  // gear calculations
 volatile int wcount = 0;  //wheel speed.
 long timeperiod;  //  timeperiod is set to millis and overflows after 32 seconds, set as long will run for 20+ days without issues
-int refreshrate = 1000;  //   how often it refreshes and recalculates the RPM
+int refreshrate = 2000;  //   how often it refreshes and recalculates the RPM
 
 
 
@@ -32,7 +32,7 @@ int refreshrate = 1000;  //   how often it refreshes and recalculates the RPM
 unsigned long tickold1;
 int tickdiff1;
 unsigned int rpm1;
-long int conversiontick1 = 1000;   // conversionrate for tick 1			needs to be set
+long int conversiontick1 = 500;   // conversionrate for tick 1			needs to be set
 
 
 
@@ -70,13 +70,13 @@ void setup() {
 // the loop function runs over and over again until power down or reset
 void loop() {
 	if (millis() > timeperiod + refreshrate) {
-
+	timeperiod = millis();
 
 		cadencefunction();
 		gearratiofunction();
 		speedcalcs();
 		printing();
-		timeperiod = millis();
+	
 	}
 
 }
@@ -120,20 +120,21 @@ void cadencefunction()   // cadence calculations and LEDS
 
 void printing()
 {
-
-		Serial.println(timeperiod);
+	Serial.print("time = ");
+	int timenow = (millis() / 1000);
+		Serial.println(timenow);
 
 		Serial.print(" ticker count is: ");
 		Serial.println(tick1);
-		Serial.println(tickdiff1);
+		//Serial.println(tickdiff1);
 
-		tickold1 = tick1;
+
 		Serial.print("RPM is ");
 		Serial.println(rpm1);
 		Serial.print("cassete count = ");
 		Serial.println(tick2);
-		Serial.print("revoultion count = ");
-			Serial.println(wcount);
+		//Serial.print("revoultion count = ");
+		//Serial.println(wcount);
 		
 		Serial.println(" ");
 }
