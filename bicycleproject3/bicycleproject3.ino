@@ -9,6 +9,8 @@
 */
 
 #include <PinChangeInt.h>
+#include <IRremoteInt.h>
+#include <IRremote.h>
 #define ticker1 9    // opto interruptor on chainring
 #define ticker2 10    // opto interruptor on cassette
 #define wspeed 11	  // hall effect sensor on R wheel.  
@@ -17,6 +19,10 @@
 #define LED3 5
 #define LED4 6
 #define LED5 7
+const int RECV_PIN = 7;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+int x;
 
 volatile int tick1 = 0;  //cadence sensor
 volatile int tick2 = 0;  // gear calculations
@@ -70,6 +76,10 @@ void setup() {
 	attachPinChangeInterrupt(wspeed, Wrev, FALLING);				// might need to be a rising signal.  TBD
 	timeperiod = millis();
 	tickold1 = tick1;
+
+	irrecv.enableIRIn();
+	irrecv.blink13(true);
+
 }
 
 // the loop function runs over and over again until power down or reset
@@ -80,11 +90,11 @@ void loop() {
 		cadencefunction();
 		gearshifter();
 		cadenceleds();
-		//  remote control tuning();                                             // well, should be obvious
+
 		printing();
 	
 	}
-
+		remote();                                             // well, should be obvious
 }
 
 void gearshifter() {
@@ -165,9 +175,32 @@ void printing()
 		Serial.print("ratio = ");
 		Serial.println(ratio);
 		Serial.println(" ");
+		Serial.print("x value is ");
+		Serial.println(x);
 }
 
 
+
+void remote() {
+	if (irrecv.decode(&results)) {
+		Serial.println(results.value, HEX);
+		Serial.println(x);
+		irrecv.resume();
+
+	}
+	if (results.value == 0xFF629D && x < 100) {
+
+		x++;
+		results.value = 0x000000;
+
+	}
+	if (results.value == 0xFFA857 && x > 1)
+	{
+		x--;
+		results.value = 0x000000;
+	}
+
+}
 
 
 
@@ -237,6 +270,9 @@ void speedcalcs()
 
 }
 
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
