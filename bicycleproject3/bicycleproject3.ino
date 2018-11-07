@@ -3,11 +3,9 @@
  Created:	10/27/2018 8:26:58 AM
  Author:	brian
  Version 3: 
- RPM is currently being calculated as 1 trip of the sensor as a revolution
- functions working.  need to calculate conversion rate and change refRate to ~500 or possibly more like 250
 
- each iteration of the cadence calculation is about 21ms			not sure what to do about that or if i need to do anything. probably not yet. 
- althoug its getting big and i am getting concerned
+
+ redid for school projet. self shifting.  need to focus on that.
 */
 
 #include <PinChangeInt.h>
@@ -23,7 +21,7 @@
 volatile int tick1 = 0;  //cadence sensor
 volatile int tick2 = 0;  // gear calculations
 volatile int wcount = 0;  //wheel speed.
-long timeperiod;  //  timeperiod is set to millis and overflows after 32 seconds, set as long will run for 20+ days without issues
+long timeperiod; // being used to compare to millis
 int refreshrate = 2000;  //   how often it refreshes and recalculates the RPM
 
 
@@ -35,11 +33,17 @@ unsigned int rpm1;
 long int conversiontick1 = 500;   // conversionrate for tick 1			needs to be set
 
 
+//			ints for gear shifter
+int currentgear;																// needs to be set so it always stays with the program
+int gearrange;																	// +- range before shifts occur
+int goalrpm;																		// ideal RPM
+
 
 //		ints for gearratio functions
 long int conversiontick2 = 4000;   // conversionrate for tick 2
 int tickdiff2;
 unsigned int rpm2;
+float(ratio);
 unsigned long tickold2;
 
 
@@ -54,7 +58,8 @@ long int conversionwcount = 4000;   // conversionrate for wcount
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(9600);
-	pinMode(ticker1, INPUT_PULLUP);
+	pinMode(ticker1, INPUT);
+	pinMode(ticker2, INPUT);
 	pinMode(LED1, OUTPUT);
 	pinMode(LED5, OUTPUT);
 	pinMode(LED2, OUTPUT);
@@ -73,22 +78,44 @@ void loop() {
 	timeperiod = millis();
 
 		cadencefunction();
-		gearratiofunction();
-		speedcalcs();
+		gearshifter();
+		cadenceleds();
+		//  remote control tuning();                                             // well, should be obvious
 		printing();
 	
 	}
 
 }
 
+void gearshifter() {
+	if (rpm1 >= 20) {															// if pedaling at least an rpm of 20 check to see if gear shifting needs to happen.  
+		
+		if (rpm1 > (goalrpm + gearrange)) {
+			if (currentgear == 11) { return; }
+			currentgear++;												// shift harder
+		}
+
+		if (rpm1 < (goalrpm - gearrange)) {
+			if (currentgear == 1) { return; }
+			currentgear--;															//shift easier
+		}
+
+
+	}
+
+	
+
+}
 
 void cadencefunction()   // cadence calculations and LEDS
 {
- {
-		tickdiff1 = tick1 - tickold1;
-		tickold1 = tick1;
-		rpm1 = conversiontick1 * tickdiff1 / refreshrate;  // refreshrate is coming out to be 2001millis which shouldnt really effect the calculation much
 
+	tickdiff1 = tick1 - tickold1;
+	tickold1 = tick1;
+	rpm1 = conversiontick1 * tickdiff1 / refreshrate;  // refreshrate is coming out to be 2001millis which shouldnt really effect the calculation much
+}
+void cadenceleds()
+{
 		digitalWrite(LED1, LOW);
 		digitalWrite(LED2, LOW);
 		digitalWrite(LED3, LOW);
@@ -115,7 +142,7 @@ void cadencefunction()   // cadence calculations and LEDS
 
 		timeperiod = millis();
 
-	}
+	
 }
 
 void printing()
@@ -135,26 +162,11 @@ void printing()
 		Serial.println(tick2);
 		//Serial.print("revoultion count = ");
 		//Serial.println(wcount);
-		
+		Serial.print("ratio = ");
+		Serial.println(ratio);
 		Serial.println(" ");
 }
 
-
-
-
-
-void gearratiofunction() //calculate gear ratio depending on tick1 and tick 2.  easier on a 1x drivetrain.
-						 //need to calculate the ratios, and find the ranges to set to LCD? screen as the output.   
-{
-	
-
-
-}
-
-void speedcalcs()
-{
-
-}
 
 
 
@@ -182,3 +194,49 @@ void Wrev()
 {
 	wcount++;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ------------------------------------------------------------------------------ below line the fucntions are not being called
+
+
+
+
+
+
+
+
+
+void gearratiofunction() //calculate gear ratio depending on tick1 and tick 2.  easier on a 1x drivetrain.
+						 //need to calculate the ratios, and find the ranges to set to LCD? screen as the output.   
+{
+	tickdiff2 = tick2 - tickold2;
+	tickold2 = tick2;
+	ratio = tickdiff1 / tickdiff2;
+	
+
+
+}
+
+void speedcalcs()
+{
+
+}
+
+
+
+
