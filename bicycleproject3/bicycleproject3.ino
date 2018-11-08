@@ -16,14 +16,16 @@
 #include <PinChangeInt.h>
 #include <IRremoteInt.h>
 #include <IRremote.h>
+#include<eeprom.h>
+
 #define ticker1 9    // opto interruptor on chainring
 #define ticker2 10    // opto interruptor on cassette
 #define wspeed 11	  // hall effect sensor on R wheel.  
-#define LED1 3
-#define LED2 4
-#define LED3 5
-#define LED4 6
-#define LED5 7
+//#define LED1 3
+//#define LED2 4
+//#define LED3 5
+///#define LED4 6
+//#define LED5 7
 const int RECV_PIN = 12;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
@@ -87,6 +89,9 @@ void setup() {
 
 	irrecv.enableIRIn();
 	irrecv.blink13(true);
+
+	x = EEPROM.read(1);
+	gearrange = EEPROM.read(0);
 
 }
 
@@ -211,7 +216,7 @@ void remote() {
 		flag2 = false;
 	}
 	
-	if (((results.value == 0xFFA857) || ((results.value == 0xFFFFFFFF) && (flag1 == false))) && x > 1)
+	if (((results.value == 0xFFA857) || ((results.value == 0xFFFFFFFF) && (flag2 == true))) && x > 1)
 	{
 		x--;
 		flag2 = true;
@@ -252,8 +257,14 @@ void remote() {
 	case 0xFF30CF:
 		gearrange = 1;
 		break;
+	case 0xFFA25D :
+		EEPROM.write(0, gearrange);
+		EEPROM.write(1, x);
+		break;
 
 	}
+
+
 		results.value = 0x000000;
 }
 
