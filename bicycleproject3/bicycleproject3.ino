@@ -29,6 +29,7 @@ IRrecv irrecv(RECV_PIN);
 decode_results results;
 int x;
 boolean flag1;
+boolean flag2;
 
 
 volatile int tick1 = 0;  //cadence sensor
@@ -176,15 +177,19 @@ void printing()
 
 		Serial.print("RPM is ");
 		Serial.println(rpm1);
-		Serial.print("cassete count = ");
-		Serial.println(tick2);
+		//Serial.print("cassete count = ");
+		//Serial.println(tick2);
 		//Serial.print("revoultion count = ");
 		//Serial.println(wcount);
 		//Serial.print("ratio = ");
 		//Serial.println(ratio);
-		Serial.println(results.value, HEX);
+		//Serial.println(results.value, HEX);
 		Serial.print("x value is ");
 		Serial.println(x);
+		Serial.print("gearrange is ");
+		Serial.println(gearrange);
+		
+		
 		Serial.println(" ");
 }
 
@@ -201,19 +206,55 @@ void remote() {
 
 	if (((results.value == 0xFF629D ) || ((results.value == 0xFFFFFFFF) && (flag1 == true))) && x < 50)
 	{
-
 		x++;
-		results.value = 0x000000;
 		flag1 = true;
-
+		flag2 = false;
 	}
+	
 	if (((results.value == 0xFFA857) || ((results.value == 0xFFFFFFFF) && (flag1 == false))) && x > 1)
-
 	{
 		x--;
-		results.value = 0x000000;
+		flag2 = true;
 		flag1 = false;
 	}
+	
+
+
+	switch (results.value)
+	{
+	case 0xFF6897:
+		gearrange = 10;
+		break;
+	case 0xFF52AD:
+		gearrange = 9;
+		break;
+	case 0xFF4AB5:
+		gearrange = 8;
+		break;
+	case 0xFF42BD:
+		gearrange = 7;
+		break;
+	case 0xFF5AA5:
+		gearrange = 6;
+		break;
+	case 0xFF38C7:
+		gearrange = 5;
+		break;
+	case 0xFF10EF:
+		gearrange = 4;
+		break;
+	case 0xFF7A85:
+		gearrange = 3;
+		break;
+	case 0xFF18E7:
+		gearrange = 2;
+		break;
+	case 0xFF30CF:
+		gearrange = 1;
+		break;
+
+	}
+		results.value = 0x000000;
 }
 
 
