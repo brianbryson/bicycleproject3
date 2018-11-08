@@ -6,7 +6,12 @@
 
 
  redid for school projet. self shifting.  need to focus on that.
+ light switchcase currently outputting on x value which is whats going on with the IR
+
+
+
 */
+
 
 #include <PinChangeInt.h>
 #include <IRremoteInt.h>
@@ -19,10 +24,12 @@
 #define LED3 5
 #define LED4 6
 #define LED5 7
-const int RECV_PIN = 7;
+const int RECV_PIN = 12;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 int x;
+boolean flag1;
+
 
 volatile int tick1 = 0;  //cadence sensor
 volatile int tick2 = 0;  // gear calculations
@@ -85,16 +92,17 @@ void setup() {
 // the loop function runs over and over again until power down or reset
 void loop() {
 	if (millis() > timeperiod + refreshrate) {
-	timeperiod = millis();
+		timeperiod = millis();
 
 		cadencefunction();
 		gearshifter();
 		cadenceleds();
 
 		printing();
-	
+
 	}
 		remote();                                             // well, should be obvious
+	
 }
 
 void gearshifter() {
@@ -132,7 +140,7 @@ void cadenceleds()
 		digitalWrite(LED4, LOW);
 		digitalWrite(LED5, LOW);
 
-		switch (rpm1) {
+		switch (x) {
 		case 0 ... 2:
 			digitalWrite(LED1, HIGH);
 			break;
@@ -150,7 +158,7 @@ void cadenceleds()
 			break;
 		}
 
-		timeperiod = millis();
+		//timeperiod = millis();
 
 	
 }
@@ -172,11 +180,12 @@ void printing()
 		Serial.println(tick2);
 		//Serial.print("revoultion count = ");
 		//Serial.println(wcount);
-		Serial.print("ratio = ");
-		Serial.println(ratio);
-		Serial.println(" ");
+		//Serial.print("ratio = ");
+		//Serial.println(ratio);
+		Serial.println(results.value, HEX);
 		Serial.print("x value is ");
 		Serial.println(x);
+		Serial.println(" ");
 }
 
 
@@ -184,22 +193,27 @@ void printing()
 void remote() {
 	if (irrecv.decode(&results)) {
 		Serial.println(results.value, HEX);
-		Serial.println(x);
 		irrecv.resume();
 
 	}
-	if (results.value == 0xFF629D && x < 100) {
+
+
+
+	if (((results.value == 0xFF629D ) || ((results.value == 0xFFFFFFFF) && (flag1 == true))) && x < 50)
+	{
 
 		x++;
 		results.value = 0x000000;
+		flag1 = true;
 
 	}
-	if (results.value == 0xFFA857 && x > 1)
+	if (((results.value == 0xFFA857) || ((results.value == 0xFFFFFFFF) && (flag1 == false))) && x > 1)
+
 	{
 		x--;
 		results.value = 0x000000;
+		flag1 = false;
 	}
-
 }
 
 
