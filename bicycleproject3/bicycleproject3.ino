@@ -4,11 +4,9 @@
  Author:	brian
  Version 3: 
 
+ 
 
- redid for school projet. self shifting.  need to focus on that.
- light switchcase currently outputting on x value which is whats going on with the IR
-
-
+  check limits to current gear
 
 */
 
@@ -17,21 +15,21 @@
 #include <IRremoteInt.h>
 #include <IRremote.h>
 #include<eeprom.h>
+#include <LiquidCrystal.h>
 
 #define ticker1 9    // opto interruptor on chainring
 #define ticker2 10    // opto interruptor on cassette
 #define wspeed 11	  // hall effect sensor on R wheel.  
-//#define LED1 3
-//#define LED2 4
-//#define LED3 5
-///#define LED4 6
-//#define LED5 7
-const int RECV_PIN = 12;
-IRrecv irrecv(RECV_PIN);
-decode_results results;
-int x;
-boolean flag1;
-boolean flag2;
+
+const int RECV_PIN = 12;	    //IR reciever pin
+IRrecv irrecv(RECV_PIN);		//IR reciever pin
+decode_results results;			//IR reciever pin
+
+
+int idealcadence;
+boolean flagfaster;
+boolean flagslower;
+boolean flagscreen;    // car to toggle between screens
 
 
 volatile int tick1 = 0;  //cadence sensor
@@ -39,6 +37,7 @@ volatile int tick2 = 0;  // gear calculations
 volatile int wcount = 0;  //wheel speed.
 long timeperiod; // being used to compare to millis
 int refreshrate = 2000;  //   how often it refreshes and recalculates the RPM
+long screentime;  //time var to change screen between running mode and setting mode
 
 
 
@@ -50,9 +49,9 @@ long int conversiontick1 = 500;   // conversionrate for tick 1			needs to be set
 
 
 //			ints for gear shifter
-int currentgear;																// needs to be set so it always stays with the program
-int gearrange;																	// +- range before shifts occur
-int goalrpm;																		// ideal RPM
+int currentgear ;																// needs to be set so it always stays with the program
+int cadencerange;																	// +- range before shifts occur
+																		// ideal RPM
 
 
 //		ints for gearratio functions
@@ -70,29 +69,35 @@ long int conversionwcount = 4000;   // conversionrate for wcount
 
 
 
+const int rs = 8, en = 7, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+long shiftdelay = 0;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(9600);
 	pinMode(ticker1, INPUT);
 	pinMode(ticker2, INPUT);
-	pinMode(LED1, OUTPUT);
-	pinMode(LED5, OUTPUT);
-	pinMode(LED2, OUTPUT);
-	pinMode(LED4, OUTPUT);
-	pinMode(LED3, OUTPUT);
+	
 	attachPinChangeInterrupt(ticker1, ticking1, FALLING);
 	attachPinChangeInterrupt(ticker2, ticking2, FALLING);
 	attachPinChangeInterrupt(wspeed, Wrev, FALLING);				// might need to be a rising signal.  TBD
-	timeperiod = millis();
+
 	tickold1 = tick1;
 
 	irrecv.enableIRIn();
 	irrecv.blink13(true);
 
-	x = EEPROM.read(1);
-	gearrange = EEPROM.read(0);
+	idealcadence = EEPROM.read(1);
+	cadencerange = EEPROM.read(0);
+	currentgear = EEPROM.read(2);
 
+	lcd.begin(16,2);
+
+	flagscreen = true;
+	timeperiod = millis();
+	screentime = millis();
 }
 
 // the loop function runs over and over again until power down or reset
@@ -102,29 +107,65 @@ void loop() {
 
 		cadencefunction();
 		gearshifter();
-		cadenceleds();
+		//cadenceleds();
 
 		printing();
+		LCDprinting();
 
 	}
 		remote();                                             // well, should be obvious
 	
 }
 
-void gearshifter() {
-	if (rpm1 >= 20) {															// if pedaling at least an rpm of 20 check to see if gear shifting needs to happen.  
+
+void LCDprinting() {
+	switch (flagscreen) {
+	case true:					//case where button has recently been pressed
+		lcd.setCursor(0, 0);
+		lcd.print("set cadence: ");
 		
-		if (rpm1 > (goalrpm + gearrange)) {
-			if (currentgear == 11) { return; }
-			currentgear++;												// shift harder
+		lcd.print(idealcadence);
+		lcd.setCursor(0, 1);							// column 0, row 1
+		lcd.print("cadence range:");
+		lcd.print(cadencerange);
+		break;
+
+	case false:
+		lcd.setCursor(0, 0);
+		lcd.print("                 ");
+		lcd.setCursor(0, 0);
+		lcd.print("cadence is: ");
+			lcd.print(rpm1);
+		lcd.setCursor(0, 1);
+		lcd.print("current gear: ");
+		lcd.print(currentgear);
+		break;
+
+
+	}
+}
+
+
+
+void gearshifter() {
+	if (rpm1 > 2) {					// if pedaling at least an rpm of 20 check to see if gear shifting needs to happen.
+		
+		if (millis() > shiftdelay + 1000) {
+			Serial.println("passing the time delay");
+			if (rpm1 > (idealcadence + cadencerange)) {
+				//if (currentgear == 11) { return; }
+				Serial.print("toggled current gear++");
+				currentgear++;	
+				shiftdelay = millis();
+			}
+
+			if (rpm1 < (idealcadence - cadencerange)) {						//shift easier
+				//if (currentgear == 1) { return; }
+				currentgear--;	
+				shiftdelay = millis();
+			}
+			 
 		}
-
-		if (rpm1 < (goalrpm - gearrange)) {
-			if (currentgear == 1) { return; }
-			currentgear--;															//shift easier
-		}
-
-
 	}
 
 	
@@ -140,31 +181,7 @@ void cadencefunction()   // cadence calculations and LEDS
 }
 void cadenceleds()
 {
-		digitalWrite(LED1, LOW);
-		digitalWrite(LED2, LOW);
-		digitalWrite(LED3, LOW);
-		digitalWrite(LED4, LOW);
-		digitalWrite(LED5, LOW);
-
-		switch (x) {
-		case 0 ... 2:
-			digitalWrite(LED1, HIGH);
-			break;
-		case 3 ... 4:
-			digitalWrite(LED2, HIGH);
-			break;
-		case 5 ...7:
-			digitalWrite(LED3, HIGH);
-			break;
-		case 8 ... 9:
-			digitalWrite(LED4, HIGH);
-			break;
-		case 10 ... 100:
-			digitalWrite(LED5, HIGH);
-			break;
-		}
-
-		//timeperiod = millis();
+		
 
 	
 }
@@ -180,7 +197,7 @@ void printing()
 		//Serial.println(tickdiff1);
 
 
-		Serial.print("RPM is ");
+		Serial.print("rpm1 is ");
 		Serial.println(rpm1);
 		//Serial.print("cassete count = ");
 		//Serial.println(tick2);
@@ -189,11 +206,12 @@ void printing()
 		//Serial.print("ratio = ");
 		//Serial.println(ratio);
 		//Serial.println(results.value, HEX);
-		Serial.print("x value is ");
-		Serial.println(x);
+		Serial.print("ideal cadence is ");
+		Serial.println(idealcadence);
 		Serial.print("gearrange is ");
-		Serial.println(gearrange);
-		
+		Serial.println(cadencerange);
+		Serial.print("current gear is");
+		Serial.println(currentgear);
 		
 		Serial.println(" ");
 }
@@ -204,23 +222,28 @@ void remote() {
 	if (irrecv.decode(&results)) {
 		Serial.println(results.value, HEX);
 		irrecv.resume();
+		flagscreen = true;										//adjustment screen
+	screentime = millis();
+	}
 
+	if (millis() > screentime + 5000) {
+		flagscreen = false;
 	}
 
 
 
-	if (((results.value == 0xFF629D ) || ((results.value == 0xFFFFFFFF) && (flag1 == true))) && x < 50)
+	if (((results.value == 0xFF629D ) || ((results.value == 0xFFFFFFFF) && (flagfaster == true))) && idealcadence < 99)
 	{
-		x++;
-		flag1 = true;
-		flag2 = false;
+		idealcadence++;
+		flagfaster = true;
+		flagslower = false;
 	}
 	
-	if (((results.value == 0xFFA857) || ((results.value == 0xFFFFFFFF) && (flag2 == true))) && x > 1)
+	if (((results.value == 0xFFA857) || ((results.value == 0xFFFFFFFF) && (flagslower == true))) && idealcadence > 1)
 	{
-		x--;
-		flag2 = true;
-		flag1 = false;
+		idealcadence--;
+		flagslower = true;
+		flagfaster = false;
 	}
 	
 
@@ -228,38 +251,42 @@ void remote() {
 	switch (results.value)
 	{
 	case 0xFF6897:
-		gearrange = 10;
+		cadencerange = 10;
 		break;
 	case 0xFF52AD:
-		gearrange = 9;
+		cadencerange = 9;
 		break;
 	case 0xFF4AB5:
-		gearrange = 8;
+		cadencerange = 8;
 		break;
 	case 0xFF42BD:
-		gearrange = 7;
+		cadencerange = 7;
 		break;
 	case 0xFF5AA5:
-		gearrange = 6;
+		cadencerange = 6;
 		break;
 	case 0xFF38C7:
-		gearrange = 5;
+		cadencerange = 5;
 		break;
 	case 0xFF10EF:
-		gearrange = 4;
+		cadencerange = 4;
 		break;
 	case 0xFF7A85:
-		gearrange = 3;
+		cadencerange = 3;
 		break;
 	case 0xFF18E7:
-		gearrange = 2;
+		cadencerange = 2;
 		break;
 	case 0xFF30CF:
-		gearrange = 1;
+		cadencerange = 1;
 		break;
-	case 0xFFA25D :
-		EEPROM.write(0, gearrange);
-		EEPROM.write(1, x);
+
+
+
+	case 0xFFA25D :									// powerbutton saves current gear range and ideal cadence to be used upon bootup
+		EEPROM.write(0, cadencerange);
+		EEPROM.write(1, idealcadence);
+		EEPROM.write(2, currentgear);
 		break;
 
 	}
