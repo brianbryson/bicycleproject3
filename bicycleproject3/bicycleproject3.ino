@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-=======
+
 /*
  Name:		bicycleproject3.ino
  Created:	10/27/2018 8:26:58 AM
