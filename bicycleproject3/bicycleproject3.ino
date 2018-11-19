@@ -50,9 +50,12 @@ long int conversiontick1 = 500;   // to get ticks to RPM  to be calculated
 
 //			ints for gear shifter
 <<<<<<< HEAD
+<<<<<<< HEAD
 int currentgear ;											// is set when power button is hit. resets last saved.
 int cadencerange;											// +- range before shifts occur
 =======
+=======
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 int currentgear ;																// needs to be set so it always stays with the program
 int cadencerange;																	// +- range before shifts occur
 																		// ideal RPM
@@ -65,20 +68,31 @@ unsigned int rpm2;
 float(ratio);
 unsigned long tickold2;
 
+<<<<<<< HEAD
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
+
+=======
 >>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 
 
+//			ints for speedcalc
+long int conversionwcount = 4000;   // conversionrate for wcount
 
 //			ints for speedcalc
 long int conversionwcount = 4000;   // conversionrate for wcount
 
 
 
+
+<<<<<<< HEAD
 const int rs = 8, en = 7, d4 = 5, d5 = 4, d6 = 3, d7 = 2;			// setting up LCD buttons
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);							// setting up LCD buttons
 
 <<<<<<< HEAD
 long shiftdelay = 0;					// time comparison variable for shift delay
+=======
+long shiftdelay = 0;
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 =======
 long shiftdelay = 0;
 >>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
@@ -89,7 +103,10 @@ void setup() {
 	lcd.begin(16, 2);
 	pinMode(ticker1, INPUT);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 	pinMode(ticker2, INPUT);
 	
 >>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
@@ -130,9 +147,13 @@ void loop() {
 		motor();
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
 		//remote();
 		bluetooth();
 
+=======
+		remote();                                             // well, should be obvious
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 =======
 		remote();                                             // well, should be obvious
 >>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
@@ -325,6 +346,7 @@ void remote() {
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 void motor()
 {
 
@@ -332,6 +354,8 @@ void motor()
 
 
 =======
+=======
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 
 
 
@@ -339,6 +363,9 @@ void motor()
 
 
 // interrupt counters are only counting
+<<<<<<< HEAD
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
+=======
 >>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 void ticking1()
 {
@@ -365,11 +392,19 @@ void Wrev()
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> parent of 1830a88... trimmed the fat. still waiting on motor.
 
 
 
 
 
+// ------------------------------------------------------------------------------ below line the fucntions are not being called
 
 
 
@@ -381,6 +416,28 @@ void Wrev()
 
 
 
+
+
+
+void gearratiofunction() //calculate gear ratio depending on tick1 and tick 2.  easier on a 1x drivetrain.
+						 //need to calculate the ratios, and find the ranges to set to LCD? screen as the output.   
+{
+	tickdiff2 = tick2 - tickold2;
+	tickold2 = tick2;
+	ratio = tickdiff1 / tickdiff2;
+	
+
+
+}
+
+void speedcalcs()
+{
+
+}
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
