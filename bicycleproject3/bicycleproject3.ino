@@ -5,7 +5,7 @@
  Author:	brian
  Version 3: 
 
- 
+ tesing
 
   check limits to current gear
 
