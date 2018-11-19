@@ -6,16 +6,16 @@
 
  
 
-  check limits to current gear
+need to pull serial printing out of the final
 
 */
 
 
-#include <PinChangeInt.h>
-#include <IRremoteInt.h>
+#include <PinChangeInt.h>							//enables interrupts on all pins.  not technically needed
+#include <IRremoteInt.h>							//this and bellow are libraries for the IR remote.
 #include <IRremote.h>
-#include<eeprom.h>
-#include <LiquidCrystal.h>
+#include<eeprom.h>									// library to save things to EEPROM memory which can be rebooted from after poweroff
+#include <LiquidCrystal.h>							// library for LCD display
 
 #define ticker1 9    // opto interruptor on chainring
 
@@ -26,9 +26,9 @@ decode_results results;			//IR reciever pin
 
 
 int idealcadence;
-boolean flagfaster;
-boolean flagslower;
-boolean flagscreen;    // car to toggle between screens
+boolean flagfaster;		// flags when the faster button is preshed
+boolean flagslower;		// flages when the slower button is pressed
+boolean flagscreen;    // true = show settings, false = show current gear and RPM
 
 
 volatile int tick1 = 0;  //cadence sensor
@@ -39,45 +39,47 @@ long screentime;  //time var to change screen between running mode and setting m
 
 
 //		ints for cadence function
-unsigned long tickold1;
-int tickdiff1;
-unsigned int rpm1;
-long int conversiontick1 = 500;   // conversionrate for tick 1			needs to be set
+unsigned long tickold1;				//used to calculates ticks in a time period
+int tickdiff1;						//ticks in the time period
+unsigned int rpm1;					// calculated RPM of cranks
+long int conversiontick1 = 500;   // to get ticks to RPM  to be calculated
 
 
 //			ints for gear shifter
-int currentgear ;																// is set when power button is hit. resets last saved.
-int cadencerange;																	// +- range before shifts occur
+int currentgear ;											// is set when power button is hit. resets last saved.
+int cadencerange;											// +- range before shifts occur
 
 
 
 
-const int rs = 8, en = 7, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+const int rs = 8, en = 7, d4 = 5, d5 = 4, d6 = 3, d7 = 2;			// setting up LCD buttons
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);							// setting up LCD buttons
 
-long shiftdelay = 0;					// time int for shift delay
+long shiftdelay = 0;					// time comparison variable for shift delay
 
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(9600);
+	lcd.begin(16, 2);
 	pinMode(ticker1, INPUT);
-
-	
 	attachPinChangeInterrupt(ticker1, ticking1, FALLING);
 
 
 	tickold1 = tick1;
 
-	irrecv.enableIRIn();
-	irrecv.blink13(true);
+	irrecv.enableIRIn();			// turns on reviever for IR
+	irrecv.blink13(true);			//sets IR reciever to blink when it recieves a signal.  for deubgging
 
-	idealcadence = EEPROM.read(1);
+
+
+	/*returns the last saved variables including the important what gear its currently in. 
+	ideally i would have a capacitor set up so when it was unplugged it would have a split seconds worth of power to save the variables, 
+	but that is gonna be a little outside the scope of this project. */
+	idealcadence = EEPROM.read(1);				
 	cadencerange = EEPROM.read(0);
 	currentgear = EEPROM.read(2);
 
-	lcd.begin(16,2);
-
-	flagscreen = true;
+	flagscreen = true;  
 	timeperiod = millis();
 	screentime = millis();
 }
@@ -92,14 +94,22 @@ if (millis() > timeperiod + refreshrate) {
 		gearshifter();
 		printing();
 		LCDprinting();
-
+		motor();
 	}
-		remote();                                             
+		//remote();
+		bluetooth();
+
 	
 }
 
+void bluetooth() 
+{
 
-void LCDprinting() {
+}
+
+
+
+void LCDprinting() {							// code for LCD printing the outputs
 	switch (flagscreen) {
 	case true:					//case where button has recently been pressed
 		lcd.clear();
@@ -276,6 +286,12 @@ void remote() {
 
 
 		results.value = 0x000000;
+}
+
+
+void motor()
+{
+
 }
 
 
