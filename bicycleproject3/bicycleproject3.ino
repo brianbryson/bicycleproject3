@@ -6,7 +6,7 @@
  Author:	brian
  Version 3: 
 
- tesing
+ tesing 123
 
   check limits to current gear
 
